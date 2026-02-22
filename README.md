@@ -1,6 +1,6 @@
 # MAT Device Control
 
-基于 FastAPI 的设备控制服务，支持异步日志系统和动态配置管理。
+基于 FastAPI 的设备控制服务，支持异步日志系统、动态配置管理和MQTT通信。
 
 ## 特性
 
@@ -9,6 +9,7 @@
 - **动态配置**：支持通过 API 实时修改日志级别和配置参数
 - **配置持久化**：配置修改自动保存到 TOML 文件
 - **JSON 日志格式**：结构化日志，便于日志系统收集分析
+- **MQTT支持**：自动发现API端点并映射到MQTT主题，实现基于消息队列的设备控制
 
 ## 项目结构
 
@@ -24,6 +25,9 @@ mat-device-control/
     ├── api/routes/
     │   ├── health.py       # 健康检查
     │   └── config.py       # 配置 API
+    ├── mqtt/
+    │   ├── bridge.py       # MQTT桥接器
+    │   └── router.py       # MQTT路由
     └── device/
         └── controller.py   # 设备控制器
 ```
@@ -88,6 +92,9 @@ format = "json"             # 日志格式: json, text
 | GET | `/health` | 健康检查 |
 | GET | `/api/config` | 获取当前配置 |
 | PATCH | `/api/config` | 更新配置 |
+| GET | `/api/mqtt/status` | 获取MQTT状态 |
+| POST | `/api/mqtt/publish` | 发布MQTT消息 |
+| GET | `/api/mqtt/routes` | 获取API路由映射 |
 
 ### 示例
 
@@ -158,9 +165,59 @@ uv run pytest --cov=modules
 
 ### 测试覆盖
 
-- 配置模块：LogConfig、AppConfig、ConfigManager
+- 配置模块：LogConfig、AppConfig、ConfigManager、MQTTConfig
 - 日志模块：JsonFormatter、AsyncLogHandler、日志函数
 - API 路由：健康检查、配置 CRUD、参数验证
+- MQTT 模块：MQTTBridge、API端点发现、主题映射
+
+## MQTT 使用
+
+### MQTT 配置
+
+在 `config.toml` 中配置 MQTT：
+
+```toml
+[mqtt]
+enabled = true
+host = "localhost"
+port = 1883
+# username = "your_username"  # 可选
+# password = "your_password"  # 可选
+client_id = "mat-device-control"
+topic_prefix = "mat-device-control"
+qos = 1
+keepalive = 60
+```
+
+### MQTT 主题格式
+
+**通用 API 调用：**
+- `mat-device-control/api/health` - 健康检查
+- `mat-device-control/api/config` - 获取/更新配置
+
+**设备相关 API 调用：**
+- `mat-device-control/device/{device_id}/api/health` - 设备健康检查
+- `mat-device-control/device/{device_id}/api/config` - 设备配置
+
+### MQTT 示例
+
+**订阅响应：**
+```bash
+mosquitto_sub -h localhost -t "mat-device-control/#" -v
+```
+
+**健康检查：**
+```bash
+mosquitto_pub -h localhost -t "mat-device-control/api/health" -m "{}"
+```
+
+**更新配置：**
+```bash
+mosquitto_pub -h localhost -t "mat-device-control/api/config" \
+  -m '{"log": {"level": "DEBUG"}}'
+```
+
+详细使用说明请参考 [MQTT使用指南](docs/mqtt-usage.md)。
 
 ## 开发
 

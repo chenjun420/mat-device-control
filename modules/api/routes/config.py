@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from modules.core.config import config_manager
 from modules.core.logging import get_logger, update_log_level
 
-router = APIRouter(prefix="/api/config", tags=["config"])
+router = APIRouter(prefix="/config", tags=["config"])
 logger = get_logger(__name__)
 
 

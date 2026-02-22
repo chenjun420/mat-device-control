@@ -12,6 +12,7 @@ Application modules containing core functionality, API endpoints, and device con
 modules/
 ├── core/               # Core utilities (config, logging, response)
 ├── api/                # API routes and handlers  
+├── mqtt/               # MQTT integration (bridge, router)
 ├── device/             # Device control logic
 └── __init__.py
 ```
@@ -22,6 +23,8 @@ modules/
 | Configuration management | core/config.py | Thread-safe config manager with TOML persistence |
 | Logging system | core/logging.py | Async logging with JSON formatter |
 | API endpoints | api/routes/ | Health check and config management endpoints |
+| MQTT integration | mqtt/bridge.py | Automatic API endpoint discovery and MQTT topic mapping |
+| MQTT routing | mqtt/router.py | MQTT-related API endpoints |
 | Device operations | device/controller.py | Device connection management |
 
 ## CONVENTIONS
@@ -38,3 +41,5 @@ modules/
 - Config manager singleton pattern
 - Async logging with queue-based handlers
 - Runtime configuration updates via API
+- Automatic MQTT topic mapping for API endpoints
+- Async MQTT message handling with fastapi-mqtt

@@ -42,16 +42,63 @@ class LogConfig:
 
 
 @dataclass
+class MQTTConfig:
+    """MQTT配置"""
+    enabled: bool = True
+    host: str = "localhost"
+    port: int = 1883
+    username: str | None = None
+    password: str | None = None
+    client_id: str = "mat-device-control"
+    topic_prefix: str = "mat-device-control"
+    qos: int = 1
+    keepalive: int = 60
+
+    def to_dict(self) -> dict[str, Any]:
+        result = {
+            "enabled": self.enabled,
+            "host": self.host,
+            "port": self.port,
+            "client_id": self.client_id,
+            "topic_prefix": self.topic_prefix,
+            "qos": self.qos,
+            "keepalive": self.keepalive,
+        }
+        # Only include username and password if they are not None
+        if self.username is not None:
+            result["username"] = self.username
+        if self.password is not None:
+            result["password"] = self.password
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "MQTTConfig":
+        return cls(
+            enabled=data.get("enabled", True),
+            host=data.get("host", "localhost"),
+            port=data.get("port", 1883),
+            username=data.get("username"),
+            password=data.get("password"),
+            client_id=data.get("client_id", "mat-device-control"),
+            topic_prefix=data.get("topic_prefix", "mat-device-control"),
+            qos=data.get("qos", 1),
+            keepalive=data.get("keepalive", 60),
+        )
+
+
+@dataclass
 class AppConfig:
     """应用配置"""
     name: str = "mat-device-control"
     debug: bool = False
     log: LogConfig = field(default_factory=LogConfig)
+    mqtt: MQTTConfig = field(default_factory=MQTTConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "app": {"name": self.name, "debug": self.debug},
             "log": self.log.to_dict(),
+            "mqtt": self.mqtt.to_dict(),
         }
 
     @classmethod
@@ -60,6 +107,7 @@ class AppConfig:
             name=data.get("app", {}).get("name", "mat-device-control"),
             debug=data.get("app", {}).get("debug", False),
             log=LogConfig.from_dict(data.get("log", {})),
+            mqtt=MQTTConfig.from_dict(data.get("mqtt", {})),
         )
 
 

@@ -3,9 +3,18 @@ name = "mat-device-control"
 debug = false
 
 [log]
-level = "WARNING"
+level = "DEBUG"
 log_dir = "logs"
 max_bytes = 20971520
-backup_count = 15
+backup_count = 20
 retention_days = 7
 format = "json"
+
+[mqtt]
+enabled = true
+host = "localhost"
+port = 1883
+client_id = "mat-device-control"
+topic_prefix = "mat-device-control"
+qos = 1
+keepalive = 60

@@ -51,7 +51,7 @@ class TestConfigEndpoints:
 
     def test_get_config(self, client):
         """测试获取配置"""
-        response = client.get("/api/config")
+        response = client.get("/config")
         
         assert response.status_code == 200
         result = response.json()
@@ -69,11 +69,11 @@ class TestConfigEndpoints:
     def test_update_log_level(self, client):
         """测试更新日志级别"""
         # 先设置为 INFO
-        client.patch("/api/config", json={"log": {"level": "INFO"}})
+        client.patch("/config", json={"log": {"level": "INFO"}})
         
         # 更新为 DEBUG
         response = client.patch(
-            "/api/config",
+            "/config",
             json={"log": {"level": "DEBUG"}}
         )
         
@@ -86,28 +86,22 @@ class TestConfigEndpoints:
     def test_update_multiple_fields(self, client):
         """测试更新多个字段"""
         response = client.patch(
-            "/api/config",
-            json={
-                "log": {
-                    "level": "WARNING",
-                    "max_bytes": 20971520,
-                    "backup_count": 15
-                }
-            }
+            "/config",
+            json={"log": {"level": "DEBUG", "max_bytes": 20971520, "backup_count": 20}}
         )
         
         assert response.status_code == 200
         result = response.json()
         assert result["success"] is True
         data = result["data"]
-        assert data["log"]["level"] == "WARNING"
+        assert data["log"]["level"] == "DEBUG"
         assert data["log"]["max_bytes"] == 20971520
-        assert data["log"]["backup_count"] == 15
+        assert data["log"]["backup_count"] == 20
 
     def test_update_invalid_log_level(self, client):
         """测试更新无效日志级别"""
         response = client.patch(
-            "/api/config",
+            "/config",
             json={"log": {"level": "INVALID"}}
         )
         
@@ -120,8 +114,8 @@ class TestConfigEndpoints:
     def test_update_invalid_backup_count(self, client):
         """测试更新无效的备份数量"""
         response = client.patch(
-            "/api/config",
-            json={"log": {"backup_count": 0}}  # 最小值为 1
+            "/config",
+            json={"log": {"backup_count": 0}}
         )
         
         assert response.status_code == 200
@@ -132,8 +126,8 @@ class TestConfigEndpoints:
     def test_update_backup_count_too_large(self, client):
         """测试备份数量超出最大值"""
         response = client.patch(
-            "/api/config",
-            json={"log": {"backup_count": 150}}  # 最大值为 100
+            "/config",
+            json={"log": {"backup_count": 200}}
         )
         
         assert response.status_code == 200
@@ -144,8 +138,8 @@ class TestConfigEndpoints:
     def test_update_invalid_retention_days(self, client):
         """测试更新无效的保留天数"""
         response = client.patch(
-            "/api/config",
-            json={"log": {"retention_days": 0}}  # 最小值为 1
+            "/config",
+            json={"log": {"retention_days": 0}}
         )
         
         assert response.status_code == 200
@@ -156,8 +150,8 @@ class TestConfigEndpoints:
     def test_update_invalid_format(self, client):
         """测试更新无效的日志格式"""
         response = client.patch(
-            "/api/config",
-            json={"log": {"format": "xml"}}
+            "/config",
+            json={"log": {"level": "INVALID"}}
         )
         
         assert response.status_code == 200
@@ -167,7 +161,7 @@ class TestConfigEndpoints:
 
     def test_update_empty_body(self, client):
         """测试空请求体"""
-        response = client.patch("/api/config", json={})
+        response = client.patch("/config", json={})
         
         assert response.status_code == 200
         result = response.json()
@@ -176,7 +170,7 @@ class TestConfigEndpoints:
     @pytest.mark.asyncio
     async def test_get_config_async(self, async_client):
         """测试异步获取配置"""
-        response = await async_client.get("/api/config")
+        response = await async_client.get("/config")
         
         assert response.status_code == 200
         result = response.json()

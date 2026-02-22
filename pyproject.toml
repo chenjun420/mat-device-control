@@ -10,13 +10,16 @@ dependencies = [
     "python-dateutil>=2.9.0.post0",
     "tomli-w>=1.2.0",
     "uvicorn>=0.41.0",
+    "fastapi-mqtt>=2.0.0",
 ]
 
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "mypy>=1.19.1",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.2",
 ]
 
 [tool.pytest.ini_options]
