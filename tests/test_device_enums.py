@@ -1,6 +1,5 @@
 """设备枚举类型单元测试"""
 
-import pytest
 
 from modules.device.enums import (
     ConnectionType,
