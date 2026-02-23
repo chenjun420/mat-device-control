@@ -18,3 +18,8 @@ client_id = "mat-device-control"
 topic_prefix = "mat-device-control"
 qos = 1
 keepalive = 60
+
+[devices]
+auto_load = true
+config_file = "devices.toml"
+devices = []
