@@ -1,0 +1,92 @@
+# 设备配置文件
+# 在应用启动时自动加载所有配置的设备
+
+# 设备列表
+[[devices]]
+# 设备唯一标识符
+device_id = "psu001"
+
+# 设备基本信息
+model = "E36312A"
+manufacturer = "Keysight"
+category = "power_supply"
+
+# 连接配置
+connection_type = "tcpip"
+protocol = "scpi"
+resource_string = "TCPIP0::192.168.1.100::5025::SOCKET"
+
+# 启动行为
+auto_connect = true   # 启动时自动连接
+enabled = true        # 是否启用此设备
+
+# 通信参数
+timeout = 5.0
+retry_count = 3
+retry_delay = 0.5
+
+# 额外配置（可选）
+[devices.config]
+description = "主电源 - 通道1-2用于数字电路，通道3用于模拟电路"
+location = "测试台A"
+
+[[devices]]
+device_id = "psu002"
+model = "E36312A"
+manufacturer = "Keysight"
+category = "power_supply"
+connection_type = "tcpip"
+protocol = "scpi"
+resource_string = "TCPIP0::192.168.1.101::5025::SOCKET"
+auto_connect = true
+enabled = true
+
+[devices.config]
+description = "辅助电源"
+location = "测试台B"
+
+[[devices]]
+device_id = "scope001"
+model = "SDS1104X-E"
+manufacturer = "Siglent"
+category = "oscilloscope"
+connection_type = "tcpip"
+protocol = "scpi"
+resource_string = "TCPIP0::192.168.1.102::5025::SOCKET"
+auto_connect = true
+enabled = true
+
+[devices.config]
+description = "4通道数字示波器"
+location = "测试台A"
+
+[[devices]]
+device_id = "scope002"
+model = "SDS1104X-E"
+manufacturer = "Siglent"
+category = "oscilloscope"
+connection_type = "tcpip"
+protocol = "scpi"
+resource_string = "TCPIP0::192.168.1.103::5025::SOCKET"
+auto_connect = false   # 不自动连接，按需连接
+enabled = true
+
+[devices.config]
+description = "备用示波器"
+location = "测试台B"
+
+# 禁用的设备示例
+[[devices]]
+device_id = "psu_backup"
+model = "E36312A"
+manufacturer = "Keysight"
+category = "power_supply"
+connection_type = "tcpip"
+protocol = "scpi"
+resource_string = "TCPIP0::192.168.1.200::5025::SOCKET"
+auto_connect = false
+enabled = false   # 此设备已禁用，不会被加载
+
+[devices.config]
+description = "备用电源（已禁用）"
+location = "存储区"

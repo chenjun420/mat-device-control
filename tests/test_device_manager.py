@@ -660,3 +660,140 @@ class TestDeviceManagerWithConfig:
 
         assert len(drivers) == 2
         assert manager.count() == 2
+
+
+class TestDeviceManagerEdgeCases:
+    """设备管理器边缘情况测试"""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """每个测试前清除管理器和注册表"""
+        from modules.device.manager import DeviceManager
+        from modules.device.registry import DriverRegistry
+
+        DeviceManager._clear_instance()
+        DriverRegistry._clear_instance()
+
+        yield
+
+        DeviceManager._clear_instance()
+        DriverRegistry._clear_instance()
+
+    @pytest.mark.asyncio
+    async def test_create_device_no_driver_registered(self):
+        """测试创建设备时没有注册驱动"""
+        from modules.device.manager import DeviceManager
+
+        manager = DeviceManager()
+
+        with pytest.raises(KeyError, match="No driver found"):
+            await manager.create_device(
+                DeviceConfig(
+                    device_id="PSU001",
+                    model="UnknownModel",
+                    manufacturer="UnknownManufacturer",
+                    category=DeviceCategory.POWER_SUPPLY,
+                    connection_type=ConnectionType.TCPIP,
+                    protocol=ProtocolType.VISA,
+                    resource_string="TCPIP0::192.168.1.100::inst0::INSTR",
+                )
+            )
+
+    @pytest.mark.asyncio
+    async def test_remove_connected_device(self):
+        """测试移除已连接的设备"""
+        from modules.device.manager import DeviceManager
+        from modules.device.registry import DriverRegistry
+
+        # 注册驱动
+        registry = DriverRegistry()
+        registry.register_driver(
+            driver_class=MockDriver,
+            category=DeviceCategory.POWER_SUPPLY,
+            manufacturer="TestManufacturer",
+            model="TestModel",
+        )
+
+        manager = DeviceManager()
+        await manager.create_device(
+            DeviceConfig(
+                device_id="PSU001",
+                model="TestModel",
+                manufacturer="TestManufacturer",
+                category=DeviceCategory.POWER_SUPPLY,
+                connection_type=ConnectionType.TCPIP,
+                protocol=ProtocolType.VISA,
+                resource_string="TCPIP0::192.168.1.100::inst0::INSTR",
+            )
+        )
+        await manager.connect_device("PSU001")
+
+        # 移除已连接的设备
+        result = await manager.remove_device("PSU001")
+
+        assert result is True
+        assert manager.get_device("PSU001") is None
+
+    @pytest.mark.asyncio
+    async def test_execute_query_without_command(self):
+        """测试执行查询命令时没有提供命令"""
+        from modules.device.manager import DeviceManager
+        from modules.device.registry import DriverRegistry
+
+        # 注册驱动
+        registry = DriverRegistry()
+        registry.register_driver(
+            driver_class=MockDriver,
+            category=DeviceCategory.POWER_SUPPLY,
+            manufacturer="TestManufacturer",
+            model="TestModel",
+        )
+
+        manager = DeviceManager()
+        await manager.create_device(
+            DeviceConfig(
+                device_id="PSU001",
+                model="TestModel",
+                manufacturer="TestManufacturer",
+                category=DeviceCategory.POWER_SUPPLY,
+                connection_type=ConnectionType.TCPIP,
+                protocol=ProtocolType.VISA,
+                resource_string="TCPIP0::192.168.1.100::inst0::INSTR",
+            )
+        )
+        await manager.connect_device("PSU001")
+
+        with pytest.raises(ValueError, match="query command requires"):
+            await manager.execute_command("PSU001", "query", None)
+
+    @pytest.mark.asyncio
+    async def test_execute_write_without_command(self):
+        """测试执行写入命令时没有提供命令"""
+        from modules.device.manager import DeviceManager
+        from modules.device.registry import DriverRegistry
+
+        # 注册驱动
+        registry = DriverRegistry()
+        registry.register_driver(
+            driver_class=MockDriver,
+            category=DeviceCategory.POWER_SUPPLY,
+            manufacturer="TestManufacturer",
+            model="TestModel",
+        )
+
+        manager = DeviceManager()
+        await manager.create_device(
+            DeviceConfig(
+                device_id="PSU001",
+                model="TestModel",
+                manufacturer="TestManufacturer",
+                category=DeviceCategory.POWER_SUPPLY,
+                connection_type=ConnectionType.TCPIP,
+                protocol=ProtocolType.VISA,
+                resource_string="TCPIP0::192.168.1.100::inst0::INSTR",
+            )
+        )
+        await manager.connect_device("PSU001")
+
+        with pytest.raises(ValueError, match="write command requires"):
+            await manager.execute_command("PSU001", "write", None)

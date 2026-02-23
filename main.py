@@ -12,6 +12,7 @@ from modules.core.config import config_manager
 from modules.core.exceptions import register_exception_handlers
 from modules.core.logging import configure_root_logger, get_logger
 from modules.core.response import OrjsonResponse, ResponseMiddleware
+from modules.device.loader import get_device_loader, reset_device_loader
 
 
 # 全局MQTT桥接器
@@ -22,32 +23,64 @@ mqtt_bridge = None
 async def lifespan(_: FastAPI):
     """应用生命周期管理"""
     global mqtt_bridge
-    
+
     configure_root_logger()
     logger = get_logger(__name__)
-    logger.info("Application starting up", extra={"app_name": config_manager.config.name})
-    
+    logger.info(
+        "Application starting up", extra={"app_name": config_manager.config.name}
+    )
+
+    # 初始化设备加载器并加载设备
+    devices_config = config_manager.config.devices
+    if devices_config.auto_load:
+        logger.info("Loading devices from configuration...")
+        device_loader = get_device_loader(devices_config.config_file)
+
+        try:
+            # 初始化所有设备（自动连接标记为 auto_connect 的设备）
+            results = await device_loader.initialize_devices(
+                auto_connect=True, only_enabled=True
+            )
+
+            # 统计结果
+            created = sum(1 for r in results.values() if r["success"])
+            connected = sum(1 for r in results.values() if r["connected"])
+            logger.info(
+                f"Device initialization complete: {created} created, {connected} connected",
+                extra={"devices_created": created, "devices_connected": connected},
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize devices: {e}", extra={"error": str(e)})
+    else:
+        logger.info("Device auto-load is disabled")
+
     # 初始化MQTT桥接器
     if config_manager.config.mqtt.enabled:
         mqtt_bridge = MQTTBridge(app)
         mqtt_bridge.setup()
         set_mqtt_bridge(mqtt_bridge)
         logger.info("MQTT bridge initialized")
-        
+
         # 主动连接 MQTT
         connected = await mqtt_bridge.connect()
         if connected:
             logger.info("MQTT connected successfully")
         else:
             logger.warning("MQTT connection failed, will retry on message handling")
-    
+
     yield
-    
+
+    # 清理设备连接
+    if devices_config.auto_load:
+        logger.info("Disconnecting devices...")
+        device_loader = get_device_loader()
+        await device_loader.shutdown_devices()
+
     # 清理MQTT连接
     if mqtt_bridge:
         logger.info("Disconnecting MQTT...")
         await mqtt_bridge.disconnect()
-    
+
     logger.info("Application shutting down")
 
 
@@ -129,7 +162,7 @@ app.include_router(mqtt_router)
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

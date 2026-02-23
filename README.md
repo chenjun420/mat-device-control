@@ -10,12 +10,15 @@
 - **配置持久化**：配置修改自动保存到 TOML 文件
 - **JSON 日志格式**：结构化日志，便于日志系统收集分析
 - **MQTT支持**：自动发现API端点并映射到MQTT主题，实现基于消息队列的设备控制
+- **设备驱动框架**：统一的设备访问接口，支持SCPI、Modbus协议
+- **自动设备加载**：从配置文件自动加载设备并管理连接
 
 ## 项目结构
 
 ```
 mat-device-control/
-├── config.toml             # 配置文件
+├── config.toml             # 应用配置文件
+├── devices.toml            # 设备配置文件
 ├── main.py                 # 应用入口
 ├── pyproject.toml          # 项目配置
 └── modules/
@@ -28,8 +31,18 @@ mat-device-control/
     ├── mqtt/
     │   ├── bridge.py       # MQTT桥接器
     │   └── router.py       # MQTT路由
-    └── device/
-        └── controller.py   # 设备控制器
+    └── device/             # 设备控制模块
+        ├── controller.py   # 统一设备访问控制器
+        ├── factory.py      # 驱动工厂
+        ├── loader.py       # 设备加载器
+        ├── base.py         # 基础驱动类
+        ├── enums.py        # 枚举类型
+        ├── protocols/      # 通信协议
+        │   ├── scpi.py     # SCPI协议
+        │   └── modbus.py   # Modbus协议
+        └── drivers/        # 具体设备驱动
+            ├── keysight/   # Keysight设备
+            └── siglent/    # Siglent设备
 ```
 
 ## 快速开始
@@ -62,7 +75,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 ## 配置
 
-### 配置文件 (config.toml)
+### 应用配置 (config.toml)
 
 ```toml
 [app]
@@ -76,6 +89,97 @@ max_bytes = 10485760        # 单文件最大 10MB
 backup_count = 10           # 最多保留 10 个文件
 retention_days = 7          # 保留 7 天
 format = "json"             # 日志格式: json, text
+
+[mqtt]
+enabled = true
+host = "localhost"
+port = 1883
+client_id = "mat-device-control"
+topic_prefix = "mat-device-control"
+qos = 1
+keepalive = 60
+
+[devices]
+auto_load = true            # 启动时自动加载设备
+config_file = "devices.toml" # 设备配置文件路径
+```
+
+### 设备配置 (devices.toml)
+
+```toml
+[[devices]]
+device_id = "psu001"        # 设备唯一标识符
+model = "E36312A"          # 设备型号
+manufacturer = "Keysight"  # 制造商
+category = "power_supply"  # 设备类别
+connection_type = "tcpip"  # 连接类型
+protocol = "scpi"          # 通信协议
+resource_string = "TCPIP0::192.168.1.100::5025::SOCKET"
+auto_connect = true        # 启动时自动连接
+enabled = true             # 是否启用
+timeout = 5.0              # 通信超时（秒）
+retry_count = 3            # 重试次数
+retry_delay = 0.5          # 重试间隔（秒）
+
+[devices.config]
+description = "主电源"
+location = "测试台A"
+```
+
+## 设备控制
+
+### 统一设备访问接口
+
+使用 `DeviceController` 统一管理所有设备：
+
+```python
+from modules.device.controller import get_controller
+
+controller = get_controller()
+
+# 创建设备
+config = {
+    "device_id": "psu001",
+    "model": "E36312A",
+    "manufacturer": "Keysight",
+    "category": "power_supply",
+    "connection_type": "tcpip",
+    "protocol": "scpi",
+    "resource_string": "TCPIP0::192.168.1.100::5025::SOCKET"
+}
+await controller.create("psu001", config)
+
+# 连接设备
+await controller.connect("psu001")
+
+# 统一调用设备方法
+await controller.call("psu001", "set_voltage", channel=1, voltage=12.0)
+voltage = await controller.call("psu001", "measure_voltage", channel=1)
+
+# 查询设备方法
+methods = controller.methods("psu001")
+# {
+#     "device_id": "psu001",
+#     "methods": {
+#         "set_voltage": {
+#             "description": "设置通道电压...",
+#             "parameters": [
+#                 {"name": "channel", "type": "int", "required": True},
+#                 {"name": "voltage", "type": "float", "required": True}
+#             ],
+#             "return_type": "None"
+#         },
+#         "measure_voltage": {
+#             "description": "测量通道输出电压...",
+#             "parameters": [{"name": "channel", "type": "int", "required": True}],
+#             "return_type": "float"
+#         }
+#     }
+# }
+
+# 列出所有设备
+all_devices = controller.list()
+power_supplies = controller.list(category="power_supply")
 ```
 
 ## API 文档
@@ -169,6 +273,7 @@ uv run pytest --cov=modules
 - 日志模块：JsonFormatter、AsyncLogHandler、日志函数
 - API 路由：健康检查、配置 CRUD、参数验证
 - MQTT 模块：MQTTBridge、API端点发现、主题映射
+- 设备模块：DeviceController、DriverFactory、方法反射
 
 ## MQTT 使用
 

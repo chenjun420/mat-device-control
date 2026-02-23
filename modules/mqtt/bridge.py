@@ -227,7 +227,8 @@ class MQTTBridge:
                 }, ensure_ascii=False)
                 mqtt_client.publish(f"response/{topic}", response_payload, qos=mqtt_config.qos)
     
-    def _extract_api_path(self, topic: str, topic_prefix: str) -> tuple[str, Optional[str]]:
+    @staticmethod
+    def _extract_api_path(topic: str, topic_prefix: str) -> tuple[str, Optional[str]]:
         """
         从MQTT主题提取API路径
         
