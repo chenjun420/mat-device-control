@@ -3,7 +3,6 @@
 在应用启动时根据配置文件自动加载设备驱动。
 """
 
-import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +10,6 @@ import tomllib
 
 from modules.core.logging import get_logger
 from modules.device.controller import get_controller, reset_controller
-from modules.device.enums import DeviceCategory, ConnectionType, ProtocolType
 
 logger = get_logger(__name__)
 
@@ -162,11 +160,12 @@ class DeviceLoader:
         connected_count = sum(1 for r in results.values() if r["connected"])
 
         logger.info(
-            f"Device initialization complete: {success_count}/{len(configs)} created, {connected_count} connected",
+            f"Device initialization complete: {success_count}/{len(configs)} "
+            f"created, {connected_count} connected",
             extra={
                 "total": len(configs),
-                "created": success_count,
-                "connected": connected_count,
+                "devices_created": success_count,
+                "devices_connected": connected_count,
             },
         )
 

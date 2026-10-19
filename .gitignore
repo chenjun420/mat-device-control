@@ -8,3 +8,22 @@ wheels/
 
 # Virtual environments
 .venv
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Runtime artifacts
+logs/
+*.log
+
+# Build/release archives
+*.zip
+*.tar.gz
+
+# Cache & misc
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+

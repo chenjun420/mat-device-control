@@ -6,7 +6,8 @@
 
 import importlib
 import sys
-from typing import Dict, Type, List, Optional
+from typing import Dict, List, Optional, Type
+
 from modules.device.base import BaseDriver, DeviceConfig
 
 
@@ -42,6 +43,41 @@ class DriverFactory:
         )
         self._driver_paths["Siglent.SDS1104X-E"] = (
             "modules.device.drivers.siglent.sds1000x:SiglentSDS1000X"
+        )
+
+        # 通用 SCPI 电源（对齐 ATEStudio edge 通用设备契约：
+        # set_voltage(value, channel?) / measure_voltage(channel?)）
+        self._driver_paths["MAT.GenericPSU"] = (
+            "modules.device.drivers.generic.scpi_psu:GenericSCPIPowerSupply"
+        )
+
+        # 虚拟仪器（确定性行为模型，无硬件时跑通 ATEStudio PA601 commissioning）
+        self._driver_paths["MAT.VirtualPSU"] = (
+            "modules.device.drivers.virtual:VirtualPSU"
+        )
+        self._driver_paths["MAT.VirtualDMM"] = (
+            "modules.device.drivers.virtual:VirtualDMM"
+        )
+        self._driver_paths["MAT.VirtualELoad"] = (
+            "modules.device.drivers.virtual:VirtualELoad"
+        )
+        self._driver_paths["MAT.VirtualScope"] = (
+            "modules.device.drivers.virtual:VirtualScope"
+        )
+        self._driver_paths["MAT.VirtualACSource"] = (
+            "modules.device.drivers.virtual:VirtualACSource"
+        )
+        self._driver_paths["MAT.VirtualPowerMeter"] = (
+            "modules.device.drivers.virtual:VirtualPowerMeter"
+        )
+        self._driver_paths["MAT.VirtualSafety"] = (
+            "modules.device.drivers.virtual:VirtualSafety"
+        )
+        self._driver_paths["MAT.VirtualThermo"] = (
+            "modules.device.drivers.virtual:VirtualThermo"
+        )
+        self._driver_paths["MAT.VirtualAging"] = (
+            "modules.device.drivers.virtual:VirtualAging"
         )
 
     def create_driver(self, config: DeviceConfig) -> BaseDriver:

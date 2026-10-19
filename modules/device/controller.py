@@ -340,7 +340,7 @@ class DeviceController:
             extra={
                 "device_id": device_id,
                 "method": method,
-                "args": str(args)[:100] if args else None,
+                "call_args": str(args)[:100] if args else None,
                 "kwargs": str(kwargs)[:100] if kwargs else None,
             },
         )

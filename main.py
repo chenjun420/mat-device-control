@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from modules.api.routes.health import router as health_router
 from modules.api.routes.config import router as config_router
+from modules.api.routes.devices import router as devices_router
 from modules.mqtt.router import router as mqtt_router, set_mqtt_bridge
 from modules.mqtt.bridge import MQTTBridge
 from modules.core.config import config_manager
@@ -119,6 +120,7 @@ app = FastAPI(
 |------|------|
 | `/health` | 健康检查 |
 | `/config` | 配置管理 |
+| `/devices/{device_id}/call` | 设备方法反射调用（method 白名单约束） |
 | `/mqtt/status` | MQTT状态查询 |
 | `/mqtt/publish` | MQTT消息发布 |
 | `/mqtt/routes` | API路由映射查询 |
@@ -157,6 +159,7 @@ app.add_middleware(ResponseMiddleware)
 # 注册路由
 app.include_router(health_router)
 app.include_router(config_router)
+app.include_router(devices_router)
 app.include_router(mqtt_router)
 
 

@@ -350,6 +350,16 @@ uv run ruff format .
 uv run mypy modules/
 ```
 
+## 当前测试基线（架构升级后）
+
+**269 passed, 0 failed**（起点 234，+35）。新增包括：
+
+- `POST /devices/{id}/call` HTTP 端点 + method 白名单（A.2）
+- `scpi_reflect_server.py` SCPI 反射服务器（真机替代）
+- `GenericSCPIPowerSupply` 通用 PSU 驱动
+
+详见 `MATRag/data/reports/architecture-upgrade-completion-2026-10-18.md`。
+
 ## License
 
 MIT

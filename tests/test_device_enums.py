@@ -53,6 +53,7 @@ class TestConnectionType:
         assert ConnectionType.GPIB == "gpib"
         assert ConnectionType.VXI11 == "vxi11"
         assert ConnectionType.HISLIP == "hislip"
+        assert ConnectionType.VIRTUAL == "virtual"
 
     def test_connection_type_string_conversion(self):
         """测试连接类型字符串转换"""
@@ -65,9 +66,10 @@ class TestConnectionType:
         assert conn_type == ConnectionType.SERIAL
 
     def test_connection_type_all_values(self):
-        """测试所有连接类型值"""
+        """测试所有连接类型值（新增 VIRTUAL 后为 7 个）"""
         conn_types = [c.value for c in ConnectionType]
-        assert len(conn_types) == 6
+        assert len(conn_types) == 7
+        assert "virtual" in conn_types
 
 
 class TestProtocolType:

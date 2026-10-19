@@ -38,6 +38,8 @@ class ConnectionType(str, Enum):
     GPIB = "gpib"
     VXI11 = "vxi11"
     HISLIP = "hislip"
+    #: 虚拟设备（无物理连接；虚拟驱动忽略连接类型，connect 恒成功）。
+    VIRTUAL = "virtual"
 
 
 class ProtocolType(str, Enum):
